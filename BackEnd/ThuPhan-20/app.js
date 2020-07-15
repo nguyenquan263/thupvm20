@@ -1,6 +1,7 @@
 const EXPRESS = require('express');
 const BODY_PARSER = require('body-parser');
 const MULTER = require('multer');
+var Response = require('./utils/response');
 
 var app = EXPRESS();
 var router = require('./routes');
@@ -22,7 +23,7 @@ app.use(BODY_PARSER.urlencoded({extended: true}));
 models.sequelize.sync({
     logging: false
 })
-.then(function() { 
+.then(function(res) { 
     var server = app.listen(1607, function () {
         var host = server.address().address;
         var port = server.address().port;
@@ -31,10 +32,10 @@ models.sequelize.sync({
     
     });
 
-    console.log("Database synced!")
+    console.log(Response.successResponse("Connect to database successfully!", res));
 })
 .catch(function(err) {
-    console.log(err);
+    console.log(Response.requireDataResponse("Cannot connect to database!", err));
 });
 
 app.use(router);

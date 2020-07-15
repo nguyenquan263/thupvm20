@@ -1,5 +1,5 @@
 var models = require('../models');
-var Response = require('../utils/Response');
+var Response = require('../utils/response');
 var JWT = require('../utils/jwt');
 
 module.exports = {
@@ -32,7 +32,7 @@ module.exports = {
                 res.send(Response.notFoundResponse("Not found the target user", null));
         })
         .catch(function(err) {
-            res.send(Response.unknowErrorResponse("Internal Error", err));
+            res.send(Response.unknowErrorResponse("Internal error", err));
         });
     },
     create: async function(req, res) {
@@ -97,7 +97,7 @@ module.exports = {
             }
         })
         .catch(function(err) {
-            res.send(Response.unknowErrorResponse("Complex error.", err));
+            res.send(Response.unknowErrorResponse("Internal error.", err));
         });
     },
     login: async function(req, res) {
@@ -127,7 +127,7 @@ module.exports = {
                 res.send(Response.invalidAuthorizationResponse("Wrong username or password!", null));
         })
         .catch(function(err) {
-            res.send(Response.unknowErrorResponse("Internal Error", err));
+            res.send(Response.unknowErrorResponse("Internal error", err));
         });
     }
 }

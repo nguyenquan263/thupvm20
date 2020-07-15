@@ -1,19 +1,18 @@
 var models = require('../models');
-var Response = require('../utils/Response');
+var Response = require('../utils/response');
+const { sequelize } = require('../models');
 
 module.exports = {
     retrieveAll: async function(req, res) {
-        await models.Post.findAll({
+        await models.Comment.findAll({
             order: [
                 ['id', 'DESC']
             ]
         })
-        .then(function(posts) {
-            posts.forEach(function(post) {
-                post.tags = post.tags.split(" ");
-            });
+        .then(function(comments) {
+
         
-            res.send(Response.successResponse("This is posts list.", posts));
+            res.send(Response.successResponse("This is comments list.", comments));
         })
         .catch(function(err) {
             res.send(Response.unknowErrorResponse("Internal Error", err));
@@ -22,30 +21,31 @@ module.exports = {
     retrieveOne: async function(req, res) {
         var targetID = req.params.id;
 
-        await models.Post.findOne({
+        await models.Comment.findOne({
             where: {
                 id: targetID
             }
         })
-        .then(function(post) {
-            post.tags = post.tags.split(" ");
-
-            res.send(Response.successResponse("This is the post with ID equal " + targetID, post));
+        .then(function(comment) {
+            if (comment) {
+                res.send(Response.successResponse("This is the comment with ID equal " + targetID, comment));
+            } else {
+                res.send(Response.notFoundResponse("Not found the target comment", null));
+            }
+            
         })
         .catch(function(err) {
             res.send(Response.unknowErrorResponse("Internal Error", err));
         });
     },
     create: async function(req, res) {
-        await models.Post.create({
+        await models.Comment.create({
             owner: req.body.owner,
-            title: req.body.title,
+            post: req.body.post,
             content: req.body.content,
             created_at: new Date(),
-            tags: req.body.tags
         }).then(function(result) {
-            result.tags = result.tags.split(" ");
-            res.send(Response.successResponse("Adding a post successfully!", result));
+            res.send(Response.successResponse("Adding a comment successfully!", result));
         }).catch(function(err) {
             res.send(Response.unknowErrorResponse("Internal error.", err));
         });
@@ -53,25 +53,24 @@ module.exports = {
     update: async function(req, res) {
         var targetID = req.params.id;
 
-        await models.Post.update({
+        await models.Comment.update({
             owner: req.body.owner,
-            title: req.body.title,
+            post: req.body.post,
             content: req.body.content,
             created_at: new Date(),
-            tags: req.body.tags
         }, {
             where: {
                 id: targetID
             }
         }).then(async function(result) {
 
-            await models.Post.findOne({
+            await models.Comment.findOne({
                 where: {
                     id: targetID
                 }
             })
-            .then(function(post) {
-                res.send(Response.successResponse(`Updating a post with ID equal ${targetID} successfully!`, post));
+            .then(function(comment) {
+                res.send(Response.successResponse(`Updating a comment with ID equal ${targetID} successfully!`, comment));
             })
             .catch(function(err) {
                 res.send(Response.unknowErrorResponse("Internal Error", err));
@@ -83,20 +82,34 @@ module.exports = {
     },
     delete: async function(req, res) {
         var targetID = req.params.id;
-        await models.Post.destroy({
+        await models.Comment.destroy({
             where: {
                 id: targetID
             }
         })
         .then(function(result) {
             if (result === 0) {
-                res.send(Response.notFoundResponse(`Cannot find a post with ID equal ${targetID}.`, null));
+                res.send(Response.notFoundResponse(`Cannot find a comment with ID equal ${targetID}.`, null));
             } else {
-                res.send(Response.successResponse(`Deleting the post with ID equal ${targetID} successfully.`, null));
+                res.send(Response.successResponse(`Deleting the comment with ID equal ${targetID} successfully.`, null));
             }
         })
         .catch(function(err) {
             res.send(Response.unknowErrorResponse("Internal error.", err));
         });
+    },
+    countCommentBelongToPost: async function(req, res) {
+        var targetPostID = req.params.postID;
+
+        await sequelize.query('select * from comments where post = :postID', {
+            replacements: {
+                postID: targetPostID
+            },
+            type: sequelize.QueryTypes.SELECT
+        }).then(function(comments) {
+            res.send(Response.successResponse(`This is all comments belong to the post with ID equal ${targetPostID}`, comments))
+        }).catch(function(err) {
+            res.send(Response.unknowErrorResponse("Internal error.", err));
+        });;
     }
 }
